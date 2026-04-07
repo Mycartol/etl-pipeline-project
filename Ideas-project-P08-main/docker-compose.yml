@@ -1,0 +1,71 @@
+version: '3.8'
+services:
+
+  akwizycja:
+    build: ./akwizacja
+    ports:
+      - "5001:5000"
+    depends_on:
+      - queue
+
+  wersjonowanie:
+    build: ./wersjonowanie
+    ports:
+      - "5002:5000"
+    depends_on:
+      - akwizycja
+      - repozytorium
+
+  podsumowanie:
+    build: ./podsumowanie
+    ports:
+      - "5003:5000"
+    depends_on:
+      - wersjonowanie
+      - repozytorium  
+    env_file:
+      - ./podsumowanie/.env
+    volumes:
+      - ./podsumowanie:/app
+    restart: always
+
+  indeksowanie:
+    build:
+      context: ./indeksowanie
+      dockerfile: Dockerfile  # lub inna nazwa, jeśli zmienisz
+    container_name: indeksowanie
+    ports:
+      - "5004:5000"  # Zmień port zgodnie z tym, czego używasz w kodzie
+    env_file:
+      - ./indeksowanie/.env
+    volumes:
+      - ./indeksowanie:/app
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
+    # na razie zakomentowalem bym mogl to w ogole odpalic
+    depends_on:
+      - repozytorium # gówno, ale niech będzie 
+      #- mongo  # jeśli indeksowanie potrzebuje dostępu do MongoDB
+
+  api-frontend:
+    build: ./api-frontend
+    ports:
+      - "8080:8080"
+    working_dir: /app
+    command: sh -c "npm install && npm run dev"
+    volumes:
+      - ./api-frontend/app:/app
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    depends_on:
+      - indeksowanie
+
+  queue:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  repozytorium:
+    image: mongo:6
+    ports:
+      - "27017:27017"

@@ -1,0 +1,6 @@
+pymongo
+requests
+python-dotenv
+pymongo
+requests
+python-dotenv

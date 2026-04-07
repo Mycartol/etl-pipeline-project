@@ -1,0 +1,5 @@
+flask[async]
+flask-cors
+pymongo
+flask-pymongo
+docker

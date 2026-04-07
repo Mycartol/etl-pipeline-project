@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+python-dotenv
+pymongo
+transformers>=4.30.0
+sentencepiece
+torch>=2.0.0
+protobuf>=3.20
+openai
+requests
+pytest
